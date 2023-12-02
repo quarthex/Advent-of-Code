@@ -2,23 +2,12 @@ const INPUT: &str = include_str!("day1.txt");
 
 pub fn first_half() -> u32 {
     // Split the input into lines.
-    INPUT
+    let list = INPUT
         .trim()
         .lines()
         // For each line, get only the digits.
-        .map(|line| line.chars().filter_map(|c| c.to_digit(10)))
-        .map(|mut digits| {
-            // For each list of digits, get the first one...
-            let first = digits
-                .next()
-                .expect("There should always be at least one digit");
-            // ...and the last one (if it exists)
-            let last = digits.last().unwrap_or(first);
-            // Convert to a single number.
-            first * 10 + last
-        })
-        // Returns the sum.
-        .sum()
+        .map(|line| line.chars().filter_map(|c| c.to_digit(10)));
+    common_part(list)
 }
 
 pub fn second_half() -> u32 {
@@ -27,12 +16,11 @@ pub fn second_half() -> u32 {
     ];
 
     // Split the input into lines.
-    INPUT
+    let list = INPUT
         .trim()
         .lines()
         // Convert each line into an list of digits.
         .map(|line| {
-            // Convert the line into a list slices.
             line.char_indices().filter_map(|(index, c)| {
                 // Try to convert from a single digit...
                 c.to_digit(10)
@@ -45,17 +33,25 @@ pub fn second_half() -> u32 {
                             .and_then(|(digit, _name)| u32::try_from(digit).ok())
                     })
             })
-        })
-        .map(|mut digits| {
-            // For each list of digits, get the first one...
-            let first = digits
-                .next()
-                .expect("There should always be at least one digit");
-            // ...and the last one (if it exists)
-            let last = digits.last().unwrap_or(first);
-            // Convert to a single number.
-            first * 10 + last
-        })
-        // Returns the sum.
-        .sum()
+        });
+    common_part(list)
+}
+
+fn common_part<I>(list: I) -> u32
+where
+    I: Iterator,
+    I::Item: Iterator<Item = u32>,
+{
+    list.map(|mut digits| {
+        // For each list of digits, get the first one...
+        let first = digits
+            .next()
+            .expect("There should always be at least one digit");
+        // ...and the last one (if it exists)
+        let last = digits.last().unwrap_or(first);
+        // Convert to a single number.
+        first * 10 + last
+    })
+    // Returns the sum.
+    .sum()
 }
