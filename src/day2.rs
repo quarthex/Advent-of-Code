@@ -17,6 +17,16 @@ struct CubeSet {
     blue: u32,
 }
 
+impl CubeSet {
+    const fn is_possible(&self, max_red: u32, max_green: u32, max_blue: u32) -> bool {
+        self.red <= max_red && self.green <= max_green && self.blue <= max_blue
+    }
+
+    const fn power(self) -> u32 {
+        self.red * self.green * self.blue
+    }
+}
+
 /// Parse a cube set.
 impl FromStr for CubeSet {
     type Err = InvalidInput;
@@ -47,6 +57,24 @@ impl FromStr for CubeSet {
 struct Game {
     id: u32,
     cube_sets: Vec<CubeSet>,
+}
+
+impl Game {
+    fn is_possible(&self, max_red: u32, max_green: u32, max_blue: u32) -> bool {
+        self.cube_sets
+            .iter()
+            .all(|cube_set| cube_set.is_possible(max_red, max_green, max_blue))
+    }
+
+    fn required_cube_set(self) -> CubeSet {
+        self.cube_sets
+            .iter()
+            .fold(CubeSet::default(), |first, second| CubeSet {
+                red: first.red.max(second.red),
+                green: first.green.max(second.green),
+                blue: first.blue.max(second.blue),
+            })
+    }
 }
 
 /// Parse a game.
@@ -83,11 +111,7 @@ pub(crate) fn first_part() -> u32 {
         .map(Game::from_str)
         .map(|game| game.expect("Invalid input"))
         // Filter possible games.
-        .filter(|game| {
-            game.cube_sets.iter().all(|cube_set| {
-                cube_set.red <= MAX_RED && cube_set.green <= MAX_GREEN && cube_set.blue <= MAX_BLUE
-            })
-        })
+        .filter(|game| game.is_possible(MAX_RED, MAX_GREEN, MAX_BLUE))
         // Get the ID.
         .map(|game| game.id)
         // Sum.
@@ -102,17 +126,9 @@ pub(crate) fn second_part() -> u32 {
         .map(Game::from_str)
         .map(|game| game.expect("Invalid input"))
         // Get the required cube set for each game.
-        .map(|game| {
-            game.cube_sets
-                .iter()
-                .fold(CubeSet::default(), |first, second| CubeSet {
-                    red: first.red.max(second.red),
-                    green: first.green.max(second.green),
-                    blue: first.blue.max(second.blue),
-                })
-        })
+        .map(Game::required_cube_set)
         // Compute the power.
-        .map(|cube_set| cube_set.red * cube_set.green * cube_set.blue)
+        .map(CubeSet::power)
         // Sum.
         .sum()
 }
