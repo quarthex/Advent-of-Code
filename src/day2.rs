@@ -93,3 +93,26 @@ pub(crate) fn first_part() -> u32 {
         // Sum.
         .sum()
 }
+
+pub(crate) fn second_part() -> u32 {
+    // Parse the input.
+    INPUT
+        .trim()
+        .lines()
+        .map(Game::from_str)
+        .map(|game| game.expect("Invalid input"))
+        // Get the required cube set for each game.
+        .map(|game| {
+            game.cube_sets
+                .iter()
+                .fold(CubeSet::default(), |first, second| CubeSet {
+                    red: first.red.max(second.red),
+                    green: first.green.max(second.green),
+                    blue: first.blue.max(second.blue),
+                })
+        })
+        // Compute the power.
+        .map(|cube_set| cube_set.red * cube_set.green * cube_set.blue)
+        // Sum.
+        .sum()
+}
