@@ -1,6 +1,6 @@
 const INPUT: &str = include_str!("day1.txt");
 
-pub fn first_half() -> u32 {
+pub fn first_part() -> u32 {
     // Split the input into lines.
     let list = INPUT
         .trim()
@@ -10,7 +10,7 @@ pub fn first_half() -> u32 {
     common_part(list)
 }
 
-pub fn second_half() -> u32 {
+pub fn second_part() -> u32 {
     const DIGITS: [&str; 10] = [
         "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
     ];
