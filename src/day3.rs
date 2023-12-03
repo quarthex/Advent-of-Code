@@ -1,7 +1,7 @@
 const INPUT: &str = include_str!("day3.txt");
 
 fn is_symbol(c: char) -> bool {
-    c != '.' && !c.is_digit(10)
+    c != '.' && !c.is_ascii_digit()
 }
 
 pub(crate) fn first_part() -> u32 {
@@ -18,10 +18,10 @@ pub(crate) fn first_part() -> u32 {
                 // Get the previous character.
                 let prev = s[..column].chars().last();
                 // If the current character is a digit but not the previous one.
-                if c.is_digit(10) && (prev.map_or(true, |c| !c.is_digit(10))) {
+                if c.is_ascii_digit() && (prev.map_or(true, |c| !c.is_ascii_digit())) {
                     // Get the whole number.
                     let number = s[column..]
-                        .split_once(|c: char| !c.is_digit(10))
+                        .split_once(|c: char| !c.is_ascii_digit())
                         .unwrap_or((&s[column..], ""))
                         .0;
                     Some((line, column, number))
