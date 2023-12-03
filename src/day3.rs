@@ -14,7 +14,7 @@ pub(crate) fn first_part() -> u32 {
         .enumerate()
         .flat_map(|(line, s)| {
             // Find the numbers in the current line.
-            s.char_indices().filter_map(move |(column, c)| {
+            s.chars().enumerate().filter_map(move |(column, c)| {
                 // Get the previous character.
                 let prev = s[..column].chars().last();
                 // If the current character is a digit but not the previous one.

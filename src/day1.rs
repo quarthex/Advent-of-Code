@@ -21,7 +21,7 @@ pub(crate) fn second_part() -> u32 {
         .lines()
         // Convert each line into an list of digits.
         .map(|line| {
-            line.char_indices().filter_map(|(index, c)| {
+            line.chars().enumerate().filter_map(|(index, c)| {
                 // Try to convert from a single digit...
                 c.to_digit(10)
                     // ...or try to convert from a string.
