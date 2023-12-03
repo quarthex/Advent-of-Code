@@ -33,7 +33,7 @@ impl FromStr for CubeSet {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Create a default cube set.
-        let cube_set = CubeSet::default();
+        let cube_set = Self::default();
         // Use the commas to split the string.
         s.split(", ")
             .try_fold(cube_set, |mut cube_set, part| {
@@ -99,7 +99,7 @@ impl FromStr for Game {
     }
 }
 
-pub(crate) fn first_part() -> u32 {
+pub fn first_part() -> u32 {
     const MAX_RED: u32 = 12;
     const MAX_GREEN: u32 = 13;
     const MAX_BLUE: u32 = 14;
@@ -118,7 +118,7 @@ pub(crate) fn first_part() -> u32 {
         .sum()
 }
 
-pub(crate) fn second_part() -> u32 {
+pub fn second_part() -> u32 {
     // Parse the input.
     INPUT
         .trim()

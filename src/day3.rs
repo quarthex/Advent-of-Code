@@ -1,10 +1,10 @@
 const INPUT: &str = include_str!("day3.txt");
 
-fn is_symbol(c: char) -> bool {
+const fn is_symbol(c: char) -> bool {
     c != '.' && !c.is_ascii_digit()
 }
 
-pub(crate) fn first_part() -> u32 {
+pub fn first_part() -> u32 {
     // Split the input into lines.
     let lines: Vec<_> = INPUT.trim().lines().collect();
 
@@ -33,10 +33,10 @@ pub(crate) fn first_part() -> u32 {
         // Filter the number which are adjacent to a symbol.
         .filter_map(|(line, column, number)| {
             // Lines range.
-            let from_line = line.checked_sub(1).unwrap_or(0);
+            let from_line = line.saturating_sub(1);
             let to_line = line + 1;
             // Columns range.
-            let from_col = column.checked_sub(1).unwrap_or(0);
+            let from_col = column.saturating_sub(1);
             let to_col = column + number.len();
             // Find symbols in the ranges.
             let is_adjacent = (from_line..=to_line).any(|line| {
@@ -44,7 +44,7 @@ pub(crate) fn first_part() -> u32 {
                     lines
                         .get(line)
                         .and_then(|line| line.chars().nth(column))
-                        .map_or(false, |c| is_symbol(c))
+                        .map_or(false, is_symbol)
                 })
             });
             if is_adjacent {
@@ -57,7 +57,7 @@ pub(crate) fn first_part() -> u32 {
         .sum()
 }
 
-pub(crate) fn second_part() -> u32 {
+pub fn second_part() -> u32 {
     const GEAR: char = '*';
 
     // Split the input into lines.
@@ -106,14 +106,13 @@ pub(crate) fn second_part() -> u32 {
                     // Find the start of the number.
                     let column = lines[line][..column]
                         .rfind(|c: char| !c.is_ascii_digit())
-                        .map(|column| column + 1)
-                        .unwrap_or(0);
+                        .map_or(0, |column| column + 1);
                     // Get the number.
                     if let Some(number) = lines[line][column..]
                         .split(|c: char| !c.is_ascii_digit())
                         .next()
                     {
-                        numbers.push(number)
+                        numbers.push(number);
                     }
                 } else {
                     // Number after the current column.
@@ -122,7 +121,7 @@ pub(crate) fn second_part() -> u32 {
                         .next()
                     {
                         if !s.is_empty() {
-                            numbers.push(s)
+                            numbers.push(s);
                         }
                     }
                     // Number before the current column.
@@ -131,7 +130,7 @@ pub(crate) fn second_part() -> u32 {
                         .next()
                     {
                         if !s.is_empty() {
-                            numbers.push(s)
+                            numbers.push(s);
                         }
                     }
                 }
@@ -145,7 +144,7 @@ pub(crate) fn second_part() -> u32 {
             numbers
                 .into_iter()
                 .filter_map(|n| n.parse::<u32>().ok())
-                .fold(1, |a, b| a * b)
+                .product::<u32>()
         })
         // Sum.
         .sum()

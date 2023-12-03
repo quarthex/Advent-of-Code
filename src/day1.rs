@@ -1,6 +1,6 @@
 const INPUT: &str = include_str!("day1.txt");
 
-pub(crate) fn first_part() -> u32 {
+pub fn first_part() -> u32 {
     // Split the input into lines.
     let list = INPUT
         .trim()
@@ -10,7 +10,7 @@ pub(crate) fn first_part() -> u32 {
     common_part(list)
 }
 
-pub(crate) fn second_part() -> u32 {
+pub fn second_part() -> u32 {
     const DIGITS: [&str; 10] = [
         "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
     ];
@@ -48,9 +48,9 @@ where
             .next()
             .expect("There should always be at least one digit");
         // ...and the last one (if it exists)
-        let last = digits.last().unwrap_or(first);
+        let second = digits.last().unwrap_or(first);
         // Convert to a single number.
-        first * 10 + last
+        first * 10 + second
     })
     // Returns the sum.
     .sum()
