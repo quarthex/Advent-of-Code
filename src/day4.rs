@@ -21,11 +21,7 @@ impl Card {
     /// Compute the amount of points of a card.
     fn points(&self) -> u32 {
         // Count the amount of matching numbers.
-        let count = self
-            .got
-            .iter()
-            .filter(|n| self.winning.contains(&n))
-            .count();
+        let count = self.got.iter().filter(|n| self.winning.contains(n)).count();
 
         // If none match, returns 0.
         // If at least one matches, return 2^n.
