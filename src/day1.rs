@@ -1,6 +1,6 @@
 const INPUT: &str = include_str!("day1.txt");
 
-fn first_part_digits<'a>(s: &'a str) -> impl 'a + Iterator<Item = u32> {
+fn first_part_digits(s: &str) -> impl '_ + Iterator<Item = u32> {
     s.chars().filter_map(|c| c.to_digit(10))
 }
 
@@ -8,7 +8,7 @@ pub fn first_part() -> u32 {
     common_part(first_part_digits)
 }
 
-fn second_part_digits<'a>(s: &'a str) -> impl 'a + Iterator<Item = u32> {
+fn second_part_digits(s: &str) -> impl '_ + Iterator<Item = u32> {
     const DIGITS: [&str; 10] = [
         "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
     ];
