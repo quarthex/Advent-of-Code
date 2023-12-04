@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+const INPUT: &str = include_str!("day4.txt");
+
 /// Invalid input error.
 #[derive(Debug)]
 struct InvalidInput;
@@ -40,7 +42,7 @@ impl FromStr for Card {
         let s = s.strip_prefix("Card ").ok_or(InvalidInput)?;
         // Split the ID from the rest.
         let (id, s) = s.split_once(": ").ok_or(InvalidInput)?;
-        let id = id.parse().map_err(|_| InvalidInput)?;
+        let id = id.trim_start().parse().map_err(|_| InvalidInput)?;
         // Split the winning numbers from the got numbers.
         let (winning, got) = s.split_once(" | ").ok_or(InvalidInput)?;
         // Convert winning and got numbers into a list of integers.
@@ -55,6 +57,18 @@ impl FromStr for Card {
         // Return the resulting card.
         Ok(Self { id, winning, got })
     }
+}
+
+pub fn first_part() -> u32 {
+    // Parse the input.
+    INPUT
+        .trim()
+        .lines()
+        .map(|s| s.parse::<Card>().expect("Invalid input"))
+        // Compute the points of each card.
+        .map(|card| card.points())
+        // Sum it.
+        .sum()
 }
 
 #[cfg(test)]
