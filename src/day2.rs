@@ -2,12 +2,12 @@ use std::str::FromStr;
 
 const INPUT: &str = include_str!("day2.txt");
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// Error for invalid inputs.
 struct InvalidInput;
 
 /// A cube set.
-#[derive(Default)]
+#[derive(Debug, Default, PartialEq)]
 struct CubeSet {
     /// The amount of red cubes.
     red: u32,
@@ -54,6 +54,7 @@ impl FromStr for CubeSet {
     }
 }
 
+#[derive(Debug, PartialEq)]
 struct Game {
     id: u32,
     cube_sets: Vec<CubeSet>,
@@ -93,7 +94,7 @@ impl FromStr for Game {
             .split("; ")
             // Parse the games.
             .map(str::parse)
-            .collect::<Result<Vec<CubeSet>, _>>()
+            .collect::<Result<_, _>>()
             .map_err(|_| InvalidInput)?;
         Ok(Self { id, cube_sets })
     }
@@ -131,4 +132,70 @@ pub fn second_part() -> u32 {
         .map(CubeSet::power)
         // Sum.
         .sum()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{CubeSet, Game};
+
+    impl CubeSet {
+        const fn new(red: u32, green: u32, blue: u32) -> Self {
+            Self { red, green, blue }
+        }
+    }
+
+    #[test]
+    fn test() {
+        assert_eq!(
+            "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green".parse(),
+            Ok(Game {
+                id: 1,
+                cube_sets: vec![
+                    CubeSet::new(4, 0, 3),
+                    CubeSet::new(1, 2, 6),
+                    CubeSet::new(0, 2, 0),
+                ]
+            })
+        );
+        assert_eq!(
+            "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue".parse(),
+            Ok(Game {
+                id: 2,
+                cube_sets: vec![
+                    CubeSet::new(0, 2, 1),
+                    CubeSet::new(1, 3, 4),
+                    CubeSet::new(0, 1, 1),
+                ]
+            })
+        );
+        assert_eq!(
+            "Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red".parse(),
+            Ok(Game {
+                id: 3,
+                cube_sets: vec![
+                    CubeSet::new(20, 8, 6),
+                    CubeSet::new(4, 13, 5),
+                    CubeSet::new(1, 5, 0),
+                ]
+            })
+        );
+        assert_eq!(
+            "Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red".parse(),
+            Ok(Game {
+                id: 4,
+                cube_sets: vec![
+                    CubeSet::new(3, 1, 6),
+                    CubeSet::new(6, 3, 0),
+                    CubeSet::new(14, 3, 15),
+                ]
+            })
+        );
+        assert_eq!(
+            "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green".parse(),
+            Ok(Game {
+                id: 5,
+                cube_sets: vec![CubeSet::new(6, 3, 1), CubeSet::new(1, 2, 2),]
+            })
+        );
+    }
 }
