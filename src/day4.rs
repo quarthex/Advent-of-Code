@@ -18,10 +18,14 @@ struct Card {
 }
 
 impl Card {
+    /// Count the amount of matching numbers.
+    fn matching(&self) -> usize {
+        self.got.iter().filter(|n| self.winning.contains(n)).count()
+    }
+
     /// Compute the amount of points of a card.
     fn points(&self) -> u32 {
-        // Count the amount of matching numbers.
-        let count = self.got.iter().filter(|n| self.winning.contains(n)).count();
+        let count = self.matching();
 
         // If none match, returns 0.
         // If at least one matches, return 2^n.
@@ -65,6 +69,34 @@ pub fn first_part() -> u32 {
         .map(|card| card.points())
         // Sum it.
         .sum()
+}
+
+pub fn second_part() -> u32 {
+    // Count the amount of cards
+    let count = INPUT.trim().lines().count();
+
+    // Create a vector of cards count.
+    let mut counts = vec![1; count];
+
+    // Parse the input.
+    let cards = INPUT
+        .trim()
+        .lines()
+        .map(|s| s.parse::<Card>().expect("Invalid input"));
+
+    // Iterate from the top-most card to the bottom.
+    for (index, card) in cards.enumerate() {
+        // Get the matching count.
+        let matching = card.matching();
+
+        // Increase the counts of the following next cards.
+        for i in 1..=matching {
+            counts[index + i] += counts[index];
+        }
+    }
+
+    // Total count.
+    counts.into_iter().sum::<u32>()
 }
 
 #[cfg(test)]
