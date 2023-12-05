@@ -1,5 +1,7 @@
 use std::{num::ParseIntError, str::FromStr};
 
+const INPUT: &str = include_str!("day5.txt");
+
 /// Invalid input.
 #[derive(Debug, PartialEq)]
 enum InvalidInput {
