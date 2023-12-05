@@ -26,7 +26,15 @@ struct Map {
     /// Start of the source range.
     source_range_start: u32,
     /// Length of both ranges.
-    range_length: usize,
+    range_length: u32,
+}
+
+impl Map {
+    /// Check whether a source is managed.
+    const fn has_source(&self, source: u32) -> bool {
+        source >= self.source_range_start
+            && source < self.source_range_start.saturating_add(self.range_length)
+    }
 }
 
 impl FromStr for Map {
@@ -40,7 +48,7 @@ impl FromStr for Map {
         let source_range_start = parts.next().ok_or(InvalidInput::Other)?.parse()?;
         let range_length = parts.next().ok_or(InvalidInput::Other)?.parse()?;
         // Check for additional values.
-        if let None = parts.next() {
+        if parts.next().is_none() {
             Ok(Self {
                 destination_range_start,
                 source_range_start,
@@ -72,6 +80,31 @@ struct Input {
     humidity_to_location: Vec<Map>,
 }
 
+impl Input {
+    /// Map a seed to a location.
+    fn seed_to_location(&self, seed: u32) -> u32 {
+        // Fold the maps.
+        [
+            self.seed_to_soil.iter(),
+            self.soil_to_fertilizer.iter(),
+            self.fertilizer_to_water.iter(),
+            self.water_to_light.iter(),
+            self.light_to_temperature.iter(),
+            self.temperature_to_humidity.iter(),
+            self.humidity_to_location.iter(),
+        ]
+        .into_iter()
+        .fold(seed, |source, mut maps| {
+            // Find a map matching a source.
+            maps.find(|map| map.has_source(source))
+                .map_or(source, |map| {
+                    // Map the current source to the next source.
+                    source - map.source_range_start + map.destination_range_start
+                })
+        })
+    }
+}
+
 /// Input parser.
 impl FromStr for Input {
     type Err = InvalidInput;
@@ -95,7 +128,7 @@ impl FromStr for Input {
             // Parse maps until the empty line.
             lines
                 .take_while(|s| !s.is_empty())
-                .map(|line| line.parse())
+                .map(str::parse)
                 .collect()
         }
 
@@ -125,7 +158,7 @@ impl FromStr for Input {
         let humidity_to_location = parse_maps(&mut lines, "humidity-to-location")?;
 
         // Check end-of-file.
-        if let Some(..) = lines.next() {
+        if lines.next().is_some() {
             return Err(InvalidInput::Other);
         }
 
@@ -142,6 +175,19 @@ impl FromStr for Input {
     }
 }
 
+pub fn first_part() -> u32 {
+    // Parse the input.
+    let input: Input = INPUT.parse().expect("Invalid input");
+    // Map each seed into a location.
+    input
+        .seeds
+        .iter()
+        .map(|seed| input.seed_to_location(*seed))
+        // Find the minimum value.
+        .min()
+        .expect("Empty seed list")
+}
+
 #[cfg(test)]
 mod tests {
     use crate::day5::Input;
@@ -152,7 +198,7 @@ mod tests {
         const fn new(
             destination_range_start: u32,
             source_range_start: u32,
-            range_length: usize,
+            range_length: u32,
         ) -> Self {
             Self {
                 destination_range_start,

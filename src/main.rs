@@ -17,7 +17,8 @@ fn main() {
         .add_row([1, day1::first_part(), day1::second_part()])
         .add_row([2, day2::first_part(), day2::second_part()])
         .add_row([3, day3::first_part(), day3::second_part()])
-        .add_row([3, day4::first_part(), day4::second_part()])
+        .add_row([4, day4::first_part(), day4::second_part()])
+        .add_row([5, day5::first_part()])
         .column_iter_mut()
         .for_each(|col| col.set_cell_alignment(CellAlignment::Right));
     println!("{table}");
