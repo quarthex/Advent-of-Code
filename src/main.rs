@@ -3,7 +3,7 @@
 //! ## Français
 //! 
 //! Ceci est ma contribution à l’Advent of Code.
-//! Tu devrais essayer de résoudre les problèmes par toi-même avant d’utilise
+//! Tu devrais essayer de résoudre les problèmes par toi-même avant d’utiliser
 //!   ce code pour gagner des étoiles.
 //! 
 //! ## Esperanto
