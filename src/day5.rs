@@ -1,4 +1,4 @@
-use std::{num::ParseIntError, str::FromStr};
+use std::{num::ParseIntError, ops::Range, str::FromStr};
 
 const INPUT: &str = include_str!("day5.txt");
 
@@ -21,19 +21,20 @@ impl From<ParseIntError> for InvalidInput {
 /// A mapping.
 #[derive(Debug, PartialEq)]
 struct Map {
-    /// Start of the destination range.
-    destination_range_start: u32,
-    /// Start of the source range.
-    source_range_start: u32,
-    /// Length of both ranges.
-    range_length: u32,
+    /// Destination range.
+    destination: Range<u32>,
+    /// Source range.
+    source: Range<u32>,
 }
 
 impl Map {
-    /// Check whether a source is managed.
-    const fn has_source(&self, source: u32) -> bool {
-        source >= self.source_range_start
-            && source < self.source_range_start.saturating_add(self.range_length)
+    /// Try to map a source into a destination.
+    fn map(&self, source: u32) -> Option<u32> {
+        if self.source.contains(&source) {
+            Some(source - self.source.start + self.destination.start)
+        } else {
+            None
+        }
     }
 }
 
@@ -44,15 +45,14 @@ impl FromStr for Map {
         // Split the string.
         let mut parts = s.split_ascii_whitespace();
         // Convert the values.
-        let destination_range_start = parts.next().ok_or(InvalidInput::Other)?.parse()?;
-        let source_range_start = parts.next().ok_or(InvalidInput::Other)?.parse()?;
+        let destination_start = parts.next().ok_or(InvalidInput::Other)?.parse()?;
+        let source_start = parts.next().ok_or(InvalidInput::Other)?.parse()?;
         let range_length = parts.next().ok_or(InvalidInput::Other)?.parse()?;
         // Check for additional values.
         if parts.next().is_none() {
             Ok(Self {
-                destination_range_start,
-                source_range_start,
-                range_length,
+                destination: destination_start..destination_start.saturating_add(range_length),
+                source: source_start..source_start.saturating_add(range_length),
             })
         } else {
             Err(InvalidInput::Other)
@@ -96,11 +96,7 @@ impl Input {
         .into_iter()
         .fold(seed, |source, mut maps| {
             // Find a map matching a source.
-            maps.find(|map| map.has_source(source))
-                .map_or(source, |map| {
-                    // Map the current source to the next source.
-                    source - map.source_range_start + map.destination_range_start
-                })
+            maps.find_map(|map| map.map(source)).unwrap_or(source)
         })
     }
 }
@@ -195,15 +191,10 @@ mod tests {
     use super::Map;
 
     impl Map {
-        const fn new(
-            destination_range_start: u32,
-            source_range_start: u32,
-            range_length: u32,
-        ) -> Self {
+        const fn new(destination_start: u32, source_start: u32, range_length: u32) -> Self {
             Self {
-                destination_range_start,
-                source_range_start,
-                range_length,
+                destination: destination_start..destination_start + range_length,
+                source: source_start..source_start + range_length,
             }
         }
     }
