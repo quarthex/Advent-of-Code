@@ -1,3 +1,28 @@
+//! # Advent of Code 2023
+//!
+//! ## Français
+//! 
+//! Ceci est ma contribution à l’Advent of Code.
+//! Tu devrais essayer de résoudre les problèmes par toi-même avant d’utilise
+//!   ce code pour gagner des étoiles.
+//! 
+//! ## Esperanto
+//! 
+//! Tio estas mia kontribuo al la Advent of Code.
+//! Vi provu solvi la problemojn sole antaŭ ol uzi ĉi tion kodon por akiri
+//!   stelojn.
+//! 
+//! ## English
+//!
+//! This is my contribution to the Advent of Code.
+//! You should try to resolve the problems by yourself before using this code
+//!   to obtain stars.
+//! 
+
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
+#![warn(missing_docs)]
+
 mod day1;
 mod day2;
 mod day3;
