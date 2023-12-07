@@ -1,4 +1,4 @@
-use std::{num::ParseIntError, ops::Range, str::FromStr};
+use std::{num::ParseIntError, ops::RangeInclusive, str::FromStr};
 
 const INPUT: &str = include_str!("day5.txt");
 
@@ -22,19 +22,58 @@ impl From<ParseIntError> for InvalidInput {
 #[derive(Debug, PartialEq)]
 struct Map {
     /// Destination range.
-    destination: Range<u32>,
+    destination: RangeInclusive<u32>,
     /// Source range.
-    source: Range<u32>,
+    source: RangeInclusive<u32>,
 }
 
 impl Map {
     /// Try to map a source into a destination.
     fn map(&self, source: u32) -> Option<u32> {
         if self.source.contains(&source) {
-            Some(source - self.source.start + self.destination.start)
+            Some(source - self.source.start() + self.destination.start())
         } else {
             None
         }
+    }
+
+    /// Try to map a range of sources into a range of destinations.
+    /// Also return is was not mapped.
+    fn map_range(
+        &self,
+        source: RangeInclusive<u32>,
+    ) -> (Option<RangeInclusive<u32>>, Vec<RangeInclusive<u32>>) {
+        // Reject what is before the source range.
+        let before = if source.start() < self.source.start() {
+            let end = (*source.end()).min(self.source.start() - 1);
+            Some(*source.start()..=end)
+        } else {
+            None
+        };
+
+        // Reject what is after the source range.
+        let after = if self.source.end() < source.end() {
+            let start = (self.source.end() + 1).max(*source.start());
+            Some(start..=*source.end())
+        } else {
+            None
+        };
+
+        // Get intersection.
+        let start = (*source.start()).max(*self.source.start());
+        let end = (*source.end()).min(*self.source.end());
+        // Map to destination.
+        let destination = if start <= end {
+            let start = start - self.source.start() + self.destination.start();
+            let end = end - self.source.start() + self.destination.start();
+            Some(start..=end)
+        } else {
+            None
+        };
+
+        let rejected = [before, after].into_iter().flatten().collect();
+
+        (destination, rejected)
     }
 }
 
@@ -47,16 +86,41 @@ impl FromStr for Map {
         // Convert the values.
         let destination_start = parts.next().ok_or(InvalidInput::Other)?.parse()?;
         let source_start = parts.next().ok_or(InvalidInput::Other)?.parse()?;
-        let range_length = parts.next().ok_or(InvalidInput::Other)?.parse()?;
+        let range_length: u32 = parts.next().ok_or(InvalidInput::Other)?.parse()?;
         // Check for additional values.
-        if parts.next().is_none() {
+        if parts.next().is_none() && range_length > 0 {
+            let r = range_length - 1;
             Ok(Self {
-                destination: destination_start..destination_start.saturating_add(range_length),
-                source: source_start..source_start.saturating_add(range_length),
+                destination: destination_start..=destination_start + r,
+                source: source_start..=source_start + r,
             })
         } else {
             Err(InvalidInput::Other)
         }
+    }
+}
+
+/// Collection of maps.
+#[derive(Debug, PartialEq)]
+struct Maps(Vec<Map>);
+
+impl Maps {
+    /// Map a range of sources into a collecton of destination ranges.
+    fn map(&self, source: RangeInclusive<u32>) -> Vec<RangeInclusive<u32>> {
+        let mut destination = Vec::new();
+
+        let source = self.0.iter().fold(vec![source], |source, map| {
+            source
+                .into_iter()
+                .flat_map(|s| {
+                    let (d, r) = map.map_range(s);
+                    destination.extend(d);
+                    r
+                })
+                .collect()
+        });
+
+        destination.into_iter().chain(source).collect()
     }
 }
 
@@ -65,19 +129,19 @@ struct Input {
     /// List of seeds.
     seeds: Vec<u32>,
     /// Seed to soil maps.
-    seed_to_soil: Vec<Map>,
+    seed_to_soil: Maps,
     /// Soil to fertilizer maps.
-    soil_to_fertilizer: Vec<Map>,
+    soil_to_fertilizer: Maps,
     /// Fertilizer to water maps.
-    fertilizer_to_water: Vec<Map>,
+    fertilizer_to_water: Maps,
     /// Water to light maps.
-    water_to_light: Vec<Map>,
+    water_to_light: Maps,
     /// Ligth to temperature maps.
-    light_to_temperature: Vec<Map>,
+    light_to_temperature: Maps,
     /// Temperature to humidity maps.
-    temperature_to_humidity: Vec<Map>,
+    temperature_to_humidity: Maps,
     /// Humidity to location maps.
-    humidity_to_location: Vec<Map>,
+    humidity_to_location: Maps,
 }
 
 impl Input {
@@ -85,18 +149,42 @@ impl Input {
     fn seed_to_location(&self, seed: u32) -> u32 {
         // Fold the maps.
         [
-            self.seed_to_soil.iter(),
-            self.soil_to_fertilizer.iter(),
-            self.fertilizer_to_water.iter(),
-            self.water_to_light.iter(),
-            self.light_to_temperature.iter(),
-            self.temperature_to_humidity.iter(),
-            self.humidity_to_location.iter(),
+            &self.seed_to_soil,
+            &self.soil_to_fertilizer,
+            &self.fertilizer_to_water,
+            &self.water_to_light,
+            &self.light_to_temperature,
+            &self.temperature_to_humidity,
+            &self.humidity_to_location,
         ]
         .into_iter()
-        .fold(seed, |source, mut maps| {
+        .fold(seed, |source, maps| {
             // Find a map matching a source.
-            maps.find_map(|map| map.map(source)).unwrap_or(source)
+            maps.0
+                .iter()
+                .find_map(|map| map.map(source))
+                .unwrap_or(source)
+        })
+    }
+
+    fn seeds_to_locations(&self, seeds: RangeInclusive<u32>) -> Vec<RangeInclusive<u32>> {
+        // Fold the maps.
+        [
+            &self.seed_to_soil,
+            &self.soil_to_fertilizer,
+            &self.fertilizer_to_water,
+            &self.water_to_light,
+            &self.light_to_temperature,
+            &self.temperature_to_humidity,
+            &self.humidity_to_location,
+        ]
+        .into_iter()
+        .fold(vec![seeds], |sources, maps| {
+            // Convert a set of sources into a set of locations.
+            sources
+                .into_iter()
+                .flat_map(|sources| maps.map(sources))
+                .collect()
         })
     }
 }
@@ -107,7 +195,7 @@ impl FromStr for Input {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         /// Parse a list of maps.
-        fn parse_maps<'a, I>(lines: &mut I, name: &str) -> Result<Vec<Map>, InvalidInput>
+        fn parse_maps<'a, I>(lines: &mut I, name: &str) -> Result<Maps, InvalidInput>
         where
             I: 'a + Iterator<Item = &'a str>,
         {
@@ -125,7 +213,8 @@ impl FromStr for Input {
             lines
                 .take_while(|s| !s.is_empty())
                 .map(str::parse)
-                .collect()
+                .collect::<Result<_, _>>()
+                .map(Maps)
         }
 
         // Split into lines.
@@ -184,17 +273,35 @@ pub fn first_part() -> u32 {
         .expect("Empty seed list")
 }
 
+pub fn second_part() -> u32 {
+    // Parse the input.
+    let input: Input = INPUT.parse().expect("Invalid input");
+    // Convert the seeds to range of seeds.
+    input
+        .seeds
+        .chunks_exact(2)
+        .map(|chunk| {
+            let start = chunk[0];
+            let end = start + chunk[1] - 1;
+            start..=end
+        })
+        // Convert seeds to locations.
+        .flat_map(|seeds| input.seeds_to_locations(seeds))
+        // Get the minimum location
+        .map(|range| *range.start())
+        .min()
+        .expect("Empty location list")
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::day5::Input;
-
-    use super::Map;
+    use super::{Input, Map};
 
     impl Map {
         const fn new(destination_start: u32, source_start: u32, range_length: u32) -> Self {
             Self {
-                destination: destination_start..destination_start + range_length,
-                source: source_start..source_start + range_length,
+                destination: destination_start..=destination_start + range_length - 1,
+                source: source_start..=source_start + range_length - 1,
             }
         }
     }
@@ -243,11 +350,11 @@ humidity-to-location map:
         let input: Input = INPUT.parse().expect("Invalid input");
         assert_eq!(input.seeds, [79, 14, 55, 13]);
         assert_eq!(
-            input.seed_to_soil,
-            [Map::new(50, 98, 2), Map::new(52, 50, 48)]
+            input.seed_to_soil.0,
+            vec![Map::new(50, 98, 2), Map::new(52, 50, 48)]
         );
         assert_eq!(
-            input.soil_to_fertilizer,
+            input.soil_to_fertilizer.0,
             [
                 Map::new(0, 15, 37),
                 Map::new(37, 52, 2),
@@ -255,7 +362,7 @@ humidity-to-location map:
             ]
         );
         assert_eq!(
-            input.fertilizer_to_water,
+            input.fertilizer_to_water.0,
             [
                 Map::new(49, 53, 8),
                 Map::new(0, 11, 42),
@@ -264,11 +371,11 @@ humidity-to-location map:
             ]
         );
         assert_eq!(
-            input.water_to_light,
+            input.water_to_light.0,
             [Map::new(88, 18, 7), Map::new(18, 25, 70)]
         );
         assert_eq!(
-            input.light_to_temperature,
+            input.light_to_temperature.0,
             [
                 Map::new(45, 77, 23),
                 Map::new(81, 45, 19),
@@ -276,11 +383,11 @@ humidity-to-location map:
             ]
         );
         assert_eq!(
-            input.temperature_to_humidity,
+            input.temperature_to_humidity.0,
             [Map::new(0, 69, 1), Map::new(1, 0, 69)]
         );
         assert_eq!(
-            input.humidity_to_location,
+            input.humidity_to_location.0,
             [Map::new(60, 56, 37), Map::new(56, 93, 4)]
         );
     }
