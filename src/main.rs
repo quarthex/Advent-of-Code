@@ -28,6 +28,7 @@ mod day2;
 mod day3;
 mod day4;
 mod day5;
+mod day6;
 
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
@@ -44,6 +45,7 @@ fn main() {
         .add_row([3, day3::first_part(), day3::second_part()])
         .add_row([4, day4::first_part(), day4::second_part()])
         .add_row([5, day5::first_part(), day5::second_part()])
+        .add_row([6, day6::first_part()])
         .column_iter_mut()
         .for_each(|col| col.set_cell_alignment(CellAlignment::Right));
     println!("{table}");
