@@ -1,23 +1,23 @@
 //! # Advent of Code 2023
 //!
 //! ## Français
-//! 
+//!
 //! Ceci est ma contribution à l’Advent of Code.
 //! Tu devrais essayer de résoudre les problèmes par toi-même avant d’utiliser
 //!   ce code pour gagner des étoiles.
-//! 
+//!
 //! ## Esperanto
-//! 
+//!
 //! Tio estas mia kontribuo al la Advent of Code.
 //! Vi provu solvi la problemojn sole antaŭ ol uzi ĉi tion kodon por akiri
 //!   stelojn.
-//! 
+//!
 //! ## English
 //!
 //! This is my contribution to the Advent of Code.
 //! You should try to resolve the problems by yourself before using this code
 //!   to obtain stars.
-//! 
+//!
 
 #![warn(clippy::pedantic)]
 #![warn(clippy::nursery)]
@@ -45,7 +45,7 @@ fn main() {
         .add_row([3, day3::first_part(), day3::second_part()])
         .add_row([4, day4::first_part(), day4::second_part()])
         .add_row([5, day5::first_part(), day5::second_part()])
-        .add_row([6, day6::first_part()])
+        .add_row([6, day6::first_part(), day6::second_part()])
         .column_iter_mut()
         .for_each(|col| col.set_cell_alignment(CellAlignment::Right));
     println!("{table}");

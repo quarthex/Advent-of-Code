@@ -18,17 +18,18 @@ impl From<ParseIntError> for InvalidInput {
 }
 
 /// A race.
+#[derive(Debug)]
 struct Race {
     /// Duration of the race.
     time: u32,
     /// Record distance.
-    distance: u32,
+    distance: u64,
 }
 
 impl Race {
     /// Compute a distance in function of an hold time.
-    const fn score(&self, hold_time: u32) -> u32 {
-        (self.time - hold_time) * hold_time
+    fn score(&self, hold_time: u32) -> u64 {
+        u64::from(self.time - hold_time) * u64::from(hold_time)
     }
 
     /// Get the range of hold times that can beat the record.
@@ -99,4 +100,22 @@ pub fn first_part() -> u32 {
         .map(|r| r.end - r.start)
         // Multiply.
         .product()
+}
+
+pub fn second_part() -> u32 {
+    let range =
+    // Parse the input (strip spaces).
+    INPUT
+        .replace(' ', "")
+        .parse::<Races>()
+        .expect("Invalid input")
+        .0
+        // Get the lone race.
+        .into_iter()
+        .next()
+        .expect("Empty race list")
+        // Get the beatable range.
+        .beatable_range();
+    // Compute the amount of possibilities.
+    range.end - range.start
 }
